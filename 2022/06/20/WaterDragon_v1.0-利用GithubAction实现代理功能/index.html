@@ -1,0 +1,506 @@
+
+
+<!DOCTYPE html>
+<html lang="cn" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="暗网,黑客,极客,渗透测试,专注信息安全,数据泄露,个人隐私保护,网站漏洞研究,sql注入漏洞,xss漏洞,越权访问漏洞,逻辑漏洞,任意文件读取漏洞,漏洞扫描器,远程代码执行,ssrf漏洞,poc编写,cve,exploit,内网渗透,xxe漏洞,qq,反序列化漏洞">
+  <meta name="author" content="shadowwolf,oagi,sh3d0ww01f">
+  <meta name="keywords" content="暗网,黑客,极客,渗透测试,专注信息安全,数据泄露,个人隐私保护,网站漏洞研究,sql注入漏洞,xss漏洞,越权访问漏洞,逻辑漏洞,任意文件读取漏洞,漏洞扫描器,远程代码执行,ssrf漏洞,poc编写,cve,exploit,内网渗透,xxe漏洞,qq,反序列化漏洞">
+  
+  <title>WaterDragonv1.0:利用GithubAction实现代理功能 - shadowwolf的小站</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"oagi.ml","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<script charset="utf-8" src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+<script>
+    L2Dwidget.init({
+        "model": {
+            jsonPath: "https://cdn.jsdelivr.net/gh/cn-night-ray/live2d-widget-models@1.0/packages/live2d-widget-model-shizuku/assets/shizuku.model.json",
+            scale: 1
+        },
+        "display": {
+            "superSample": 1.2,
+            "width": 200,
+            "height": 380,
+            "position": "right",
+            "hOffset": 0,
+            "vOffset": -32
+        }
+    });
+</script>
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>OAGI</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="WaterDragonv1.0:利用GithubAction实现代理功能">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-06-20 18:05" pubdate>
+        June 20, 2022 pm
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      759 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      8
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">WaterDragonv1.0:利用GithubAction实现代理功能</h1>
+            
+            <div class="markdown-body">
+              <h1 id="WaterDragon-水龙-v1-0"><a href="#WaterDragon-水龙-v1-0" class="headerlink" title="WaterDragon 水龙 v1.0"></a>WaterDragon 水龙 v1.0</h1><p>和水一样 灵活多变,</p>
+<p>像龙一样 来去自如</p>
+<h2 id="用Github-Action实现IP代理功能-也可翻墙"><a href="#用Github-Action实现IP代理功能-也可翻墙" class="headerlink" title="用Github Action实现IP代理功能 也可翻墙"></a>用Github Action实现IP代理功能 也可翻墙</h2><h3 id="核心"><a href="#核心" class="headerlink" title="核心"></a>核心</h3><p>这个项目的<strong>核心是NPS[<a target="_blank" rel="noopener" href="https://github.com/ehang-io/nps]">https://github.com/ehang-io/nps]</a> + Github Action</strong><br>Github Action和SCF实现代理池的方式不一样：<strong>SCF可以用网关触发，但是Action不是</strong>，Action是给你提供了一台可出不可入的如同私人电脑一般的一个虚拟环境，所以我们如果要想用代理到Action然后去访问 就要我们的<strong>vps 帮忙，先做个穿透，然后转发</strong></p>
+<h2 id="Tips-代理出去的IP是微软云的-而且IP众多-也不容易被ban"><a href="#Tips-代理出去的IP是微软云的-而且IP众多-也不容易被ban" class="headerlink" title="Tips:代理出去的IP是微软云的 而且IP众多 也不容易被ban"></a>Tips:代理出去的IP是微软云的 而且IP众多 也不容易被ban</h2><h1 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h1><h4 id="1-在vps上装nps并配置"><a href="#1-在vps上装nps并配置" class="headerlink" title="1.在vps上装nps并配置"></a>1.在vps上装nps并配置</h4><p>下载地址 <a target="_blank" rel="noopener" href="https://github.com/ehang-io/nps/releases/tag/v0.26.10">https://github.com/ehang-io/nps/releases/tag/v0.26.10</a><br>下载合适的版本 这里下载的是linux_amd64_server.tar.gz<br>执行<code>tar -axvf linux_amd64_server.tar.gz</code>进行解压<br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/222.png" srcset="/img/loading.gif" lazyload></p>
+<h4 id="2-然后去修改配置"><a href="#2-然后去修改配置" class="headerlink" title="2.然后去修改配置"></a>2.然后去修改配置</h4><p><code>cd conf</code><br><code>vim nps.conf</code><br>我们修改一共2个东西</p>
+<h6 id="①-首先是-web-password"><a href="#①-首先是-web-password" class="headerlink" title="①.首先是 web_password"></a>①.首先是 web_password</h6><p><strong>这个改的越复杂越好</strong> 是nps的管理面板 不过这里不用gui的 用的是webapi，用不到gui的密码，如果是默认的123，会被有心人搞破坏</p>
+<h6 id="②-然后是这里"><a href="#②-然后是这里" class="headerlink" title="②.然后是这里"></a>②.然后是这里</h6><p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/333.png" srcset="/img/loading.gif" lazyload><br>把<code>auth_key</code>前面的注释去掉，然后修改auth_key的值<br>然后把<code>auth_crypt_key</code>修改为别的16位长度的一个字符串 （默认也可以<br><strong>然后把auth_key 记住备用</strong></p>
+<h5 id="③-http-proxy-port"><a href="#③-http-proxy-port" class="headerlink" title="③.http_proxy_port"></a>③.http_proxy_port</h5><p>可改可不改 <strong>改了是防止http监听端口与apache，nginx这些服务冲突</strong></p>
+<h5 id="④-web-port"><a href="#④-web-port" class="headerlink" title="④.web_port"></a>④.web_port</h5><p><strong>api的地址</strong>，监听的是8080端口 如果8080与本地软件有冲突则更改（按需更改）,如果改过就是    vps的ip:web_port<br>然后回到上级目录<code>cd .. </code><br>随后让nps运行<code> ./nps</code><br>如果正常未出现问题 就可以把nps挂后台然后进行 下一步了<br><code>nohup ./nps &amp;</code></p>
+<h4 id="3-获取github-token"><a href="#3-获取github-token" class="headerlink" title="3.获取github_token"></a>3.获取github_token</h4><h5 id="前往https-github-com-settings-tokens"><a href="#前往https-github-com-settings-tokens" class="headerlink" title="前往https://github.com/settings/tokens"></a>前往<a target="_blank" rel="noopener" href="https://github.com/settings/tokens">https://github.com/settings/tokens</a></h5><p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/444.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/666.png" srcset="/img/loading.gif" lazyload><br><strong>记住备用</strong></p>
+<h4 id="配置脚本"><a href="#配置脚本" class="headerlink" title="配置脚本"></a>配置脚本</h4><p>首先下载脚本<br><code>git clone https://github.com/sh3d0ww01f/WaterDragon.git</code><br>然后修改<code>main.py</code>文件<br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/777.png" srcset="/img/loading.gif" lazyload><br>   ①<strong>api的位置填上自己的api地址(<a href="http://vps_ip:web_port，如果没改过前面的web_port">http://vps_ip:web_port，如果没改过前面的web_port</a> 则就是<a target="_blank" rel="noopener" href="http://vps_ip:8080/">http://vps_ip:8080</a>)</strong><br> ②<strong>auth_key 写上更改过的auth_key</strong><br> ③<strong>token写github获取的token</strong></p>
+<h1 id="运行脚本"><a href="#运行脚本" class="headerlink" title="运行脚本"></a>运行脚本</h1><p><code>python3 main.py</code><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/888.png" srcset="/img/loading.gif" lazyload><br><strong>①.输入socks5 进入隧道管理 我们需要先加一个</strong><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/999.png" srcset="/img/loading.gif" lazyload><br>出现成功连接WebApi则说明api配置正确<br><strong>②.输入add 增加socks5隧道</strong><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/1111.png" srcset="/img/loading.gif" lazyload><br><strong>密钥随意写，端口只要外网能通就可以，加密的话1代表要加密，0代表不加密</strong><br><strong>③.配置好了新隧道，我们回到菜单使用</strong><br>输入	<code>back</code> 回到菜单,然后<strong>键入<code>manager</code>进入Github Action管理</strong><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/2222.png" srcset="/img/loading.gif" lazyload><br>输入<code>select</code>选择要连接的socks5隧道<br>这里选择新增的 客户端ID为21的<br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/3333.png" srcset="/img/loading.gif" lazyload></p>
+<p>出现<code>start success</code>即为启动成功</p>
+<p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/4444.png" srcset="/img/loading.gif" lazyload><br>配置一下 配置好 就可以用这个代理了</p>
+<h1 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h1><p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/2.png" srcset="/img/loading.gif" lazyload><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/3.png" srcset="/img/loading.gif" lazyload><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/4.png" srcset="/img/loading.gif" lazyload><br><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/5.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="停止Action"><a href="#停止Action" class="headerlink" title="停止Action"></a>停止Action</h1><p><img src="/images/WaterDragonv1.0-%E5%88%A9%E7%94%A8GithubAction%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/5555.png" srcset="/img/loading.gif" lazyload><br>然后键入0 即可暂停现在运行中的GithubAction机子<br>出现“取消运行成功” 则代表成功暂停运行</p>
+<h1 id="后序"><a href="#后序" class="headerlink" title="后序"></a>后序</h1><p>Action和SCF不一样 没有多出口 但是可以多开Action，然后实现多ip访问的目的</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0/">渗透学习</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91/">工具开发</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91/">工具开发</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E9%9A%90%E5%8C%BF/">隐匿</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%BB%A3%E7%90%86%E5%8A%9F%E8%83%BD/">代理功能</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/01/09/%5B%E9%9A%90%E5%8C%BF%5D%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8github%E7%9A%84workflow%E5%8A%9F%E8%83%BD%20%E5%88%9B%E5%BB%BA%E4%B8%80%E5%8F%B0%E4%B8%B4%E6%97%B6%E7%9A%84vps%EF%BC%81/">
+                        <span class="hidden-mobile">如何使用Github的workflow功能创建一台临时的vps!</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'oagiblog/oagiblog.github.io');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
